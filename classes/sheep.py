@@ -1,15 +1,18 @@
 from entity import Entity
-from math import sqrt
+from math import sqrt, pi, sin, cos
 class Sheep(Entity):
-    def __init__(self, canvas, x, y, alpha, beta, gamma, pr, pd, pg, safety = 5, r=10, color='blue'):
+    def __init__(self, canvas, x, y, alpha, beta, gamma, a, omega, pr, pd, pg, safety = 5, r=10, color='blue'):
         super().__init__(canvas, x, y, r, color)
         self.safety = safety
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
+        self.a = a
+        self.omega = omega
         self.pr = pr
         self.pd = pd
         self.pg = pg
+        self.step = 0
 
     def psi(self, x):
         if x > self.pd:
@@ -47,3 +50,14 @@ class Sheep(Entity):
                 psi = self.psi(sqrt(x_to_sheep**2+y_to_sheep**2))
                 vel_x += psi*ux_to_sheep
                 vel_y += psi*uy_to_sheep
+        return (vel_x, vel_y)
+
+    def velocity(self):
+        vel_to_sheeps_x, vel_to_sheeps_y = self.vel_to_sheeps()
+        vel_to_dog_x, vel_to_dog_y = self.vel_to_dog()
+        angle = self.a*pi/180*sin(self.omega*self.step*self.sampling)
+        x_rot = (cos(angle), -sin(angle))
+        y_rot = (sin(angle), cos(angle))
+
+        x_vel = vel_to_dog_x + x_rot[0]*vel_to_sheeps_x + x_rot[1]*vel_to_sheeps_y
+        y_vel = vel_to_dog_y + y_rot[0]*vel_to_sheeps_x + y_rot[1]*vel_to_sheeps_y
