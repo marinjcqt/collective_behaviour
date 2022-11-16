@@ -61,3 +61,4 @@ class Sheep(Entity):
 
         x_vel = vel_to_dog_x + x_rot[0]*vel_to_sheeps_x + x_rot[1]*vel_to_sheeps_y
         y_vel = vel_to_dog_y + y_rot[0]*vel_to_sheeps_x + y_rot[1]*vel_to_sheeps_y
+        return (x_vel, y_vel)
