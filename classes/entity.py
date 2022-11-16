@@ -9,6 +9,9 @@ class Entity:
         self.canvas = canvas
         self.id = self.canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r, fill=self.color, outline=self.color)
         self.max_vel = 10
+        self.sampling = None
+        self.x_vel = 0
+        self.y_vel = 0
 
     def moveto(self, x, y):
         self.x = x
@@ -27,9 +30,9 @@ class Entity:
 
 
     def _sim(self, x_vel, y_vel):
-        self.move(x_vel, y_vel)
+        self.move(self.sampling*x_vel, self.sampling*y_vel)
         self.canvas.after(10, lambda: self._sim(x_vel, y_vel))
 
-    def unit(self):
-        self.unit_x = self.x/sqrt(self.x^2+self.y^2)
-        self.unit_x = self.y/sqrt(self.x^2+self.y^2)
+    def unit(self, x, y):
+        unit_x = x/sqrt(x**2+y**2)
+        unit_y = y/sqrt(x**2+y**2)
