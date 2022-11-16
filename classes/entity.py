@@ -28,3 +28,7 @@ class Entity:
     def _sim(self, x_vel, y_vel):
         self.move(x_vel, y_vel)
         self.canvas.after(10, lambda: self._sim(x_vel, y_vel))
+
+    def unit(self):
+        self.unit_x = self.x/(self.x+self.y)
+        self.unit_x = self.y/(self.x+self.y)
