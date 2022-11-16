@@ -1,4 +1,5 @@
 from random import randint
+from math import sqrt
 class Entity:
     def __init__(self, canvas, x, y, r=10, color='black'):
         self.x = x
@@ -30,5 +31,5 @@ class Entity:
         self.canvas.after(10, lambda: self._sim(x_vel, y_vel))
 
     def unit(self):
-        self.unit_x = self.x/(self.x+self.y)
-        self.unit_x = self.y/(self.x+self.y)
+        self.unit_x = self.x/sqrt(self.x^2+self.y^2)
+        self.unit_x = self.y/sqrt(self.x^2+self.y^2)
