@@ -1,7 +1,7 @@
 from entity import Entity
 from math import sqrt, pi, sin, cos
 class Sheep(Entity):
-    def __init__(self, canvas, x, y, alpha, beta, gamma, a, omega, pr, pd, pg, safety = 5, r=10, color='blue'):
+    def __init__(self, canvas, x, y, alpha, beta, gamma, a, omega, pn, pr, pd, pg, safety = 5, r=10, color='blue'):
         super().__init__(canvas, x, y, r, color)
         self.safety = safety
         self.alpha = alpha
@@ -9,15 +9,18 @@ class Sheep(Entity):
         self.gamma = gamma
         self.a = a
         self.omega = omega
+        self.pn = pn
         self.pr = pr
         self.pd = pd
         self.pg = pg
         self.step = 0
+        self.ps = 10
 
     def psi(self, x):
         if x > self.pd:
             return 0
         elif x > self.pg:
+            print(self.gamma*(x-self.pg))
             return self.gamma*(x-self.pg)
         elif x > self.pr:
             return 0
@@ -33,8 +36,8 @@ class Sheep(Entity):
         raise Exception
 
     def vel_to_dog(self):
-        x_to_dog = self.x - self.canvas.dog.x
-        y_to_dog = self.y - self.canvas.dog.y
+        x_to_dog = self.x - self.display.sheepdog.x
+        y_to_dog = self.y - self.display.sheepdog.y
         ux_to_dog, uy_to_dog = self.unit(x_to_dog, y_to_dog)
         phi = self.phi(sqrt(x_to_dog**2+y_to_dog**2))
         return (phi*ux_to_dog, phi*uy_to_dog)
@@ -42,7 +45,7 @@ class Sheep(Entity):
     def vel_to_sheeps(self):
         vel_x = 0
         vel_y = 0
-        for sheep in self.canvas.sheeps:
+        for sheep in self.display.sheeps:
             if sheep.id != self.id:
                 x_to_sheep = self.x - sheep.x
                 y_to_sheep = self.y - sheep.y
@@ -62,3 +65,9 @@ class Sheep(Entity):
         x_vel = vel_to_dog_x + x_rot[0]*vel_to_sheeps_x + x_rot[1]*vel_to_sheeps_y
         y_vel = vel_to_dog_y + y_rot[0]*vel_to_sheeps_x + y_rot[1]*vel_to_sheeps_y
         return (x_vel, y_vel)
+
+    def simulate(self):
+        x_vel, y_vel = self.velocity()
+        # print(x_vel, y_vel)
+        self.move(self.sampling*x_vel, self.sampling*y_vel)
+        self.canvas.after(100, self.simulate)

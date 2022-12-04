@@ -1,15 +1,16 @@
 from random import randint
 from math import sqrt
 class Entity:
-    def __init__(self, canvas, x, y, r=10, color='black'):
+    def __init__(self, display, x, y, r=10, color='black'):
         self.x = x
         self.y = y
         self.r = r
         self.color = color
-        self.canvas = canvas
+        self.display = display
+        self.canvas = display.canvas
         self.id = self.canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r, fill=self.color, outline=self.color)
         self.max_vel = 10
-        self.sampling = None
+        self.sampling = 10
         self.x_vel = 0
         self.y_vel = 0
 
@@ -36,3 +37,4 @@ class Entity:
     def unit(self, x, y):
         unit_x = x/sqrt(x**2+y**2)
         unit_y = y/sqrt(x**2+y**2)
+        return unit_x, unit_y

@@ -37,6 +37,8 @@ class Display:
 
         self.sheeps = []
         self.sheepdog = None
+
+        
         
     def update_state(self, state):
         self.state = state
@@ -47,19 +49,20 @@ class Display:
         elif self.state == self.State.ADD_SHEEPDOG:
             self.canvas.bind('<Button-1>', self.create_sheepdog)
         elif self.state == self.State.SIMULATION:
-            for entity in self.sheeps + [self.sheepdog]:
+            for entity in self.sheeps:
                 entity.simulate()
+            self.canvas.bind('<B1-Motion>', self.sheepdog.simulate)
 
     def create_sheep(self, event):
         print('sheep')
         x, y = event.x, event.y
-        self.sheeps.append(Sheep(self.canvas, x, y, 0, 0, 0, 0, 0, 0, 0, 0))
+        self.sheeps.append(Sheep(self, x, y, 200, 100, -1, 0.1, 0.1, 50, 15, 30, 2))
 
     
     def create_sheepdog(self, event):
         print('dog')
         x,y = event.x, event.y
         if self.sheepdog == None:
-            self.sheepdog = Sheepdog(self.canvas, x,y)
+            self.sheepdog = Sheepdog(self, x,y)
         else:
             self.sheepdog.moveto(x, y)
