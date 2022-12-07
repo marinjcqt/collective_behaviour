@@ -56,7 +56,7 @@ class Display:
     def create_sheep(self, event):
         print('sheep')
         x, y = event.x, event.y
-        self.sheeps.append(Sheep(self, x, y, 200, 100, -1, 0.1, 0.1, 50, 15, 30, 2))
+        self.sheeps.append(Sheep(self, x, y, 200, 10, -10, 0.1, 0.1, 50, 100, 30, 200))
 
     
     def create_sheepdog(self, event):

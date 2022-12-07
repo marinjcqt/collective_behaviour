@@ -25,7 +25,11 @@ class Sheep(Entity):
         elif x > self.pr:
             return 0
         elif x > self.ps:
+            print('hello')
+            print(self.beta*(1/(x-self.ps)-1/(self.pr-self.ps)))
             return self.beta*(1/(x-self.ps)-1/(self.pr-self.ps))
+        else :
+            return 0
         raise Exception
 
     def phi(self, x):
