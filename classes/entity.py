@@ -38,3 +38,7 @@ class Entity:
         unit_x = x/sqrt(x**2+y**2)
         unit_y = y/sqrt(x**2+y**2)
         return unit_x, unit_y
+
+    def distance(self, x, y):
+        return sqrt((self.x-x)**2+(self.y-y)**2)
+

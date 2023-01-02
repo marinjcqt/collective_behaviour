@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter.ttk import *
 from sheep import Sheep
 from sheepdog import Sheepdog
+from barn import Barn
 from enum import Enum
 
 class Display:
@@ -38,17 +39,18 @@ class Display:
         self.sheeps = []
         self.sheepdog = None
 
-        
+        self.barn_radius = 100
         
     def update_state(self, state):
         self.state = state
         if self.state == self.State.ADD_BARN:
-            print("yes")
+            self.canvas.bind('<Button-1>', self.create_barn)
         elif self.state == self.State.ADD_SHEEPS:
             self.canvas.bind('<Button-1>', self.create_sheep)
         elif self.state == self.State.ADD_SHEEPDOG:
             self.canvas.bind('<Button-1>', self.create_sheepdog)
         elif self.state == self.State.SIMULATION:
+            self.canvas.unbind('<Button-1>')
             for entity in self.sheeps:
                 entity.simulate()
             self.canvas.bind('<B1-Motion>', self.sheepdog.simulate)
@@ -66,3 +68,8 @@ class Display:
             self.sheepdog = Sheepdog(self, x,y)
         else:
             self.sheepdog.moveto(x, y)
+
+    def create_barn(self, event):
+        x, y = event.x, event.y
+        self.barn = Barn(self, x, y, self.barn_radius)
+

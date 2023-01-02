@@ -20,17 +20,13 @@ class Sheep(Entity):
         if x > self.pd:
             return 0
         elif x > self.pg:
-            print(self.gamma*(x-self.pg))
             return self.gamma*(x-self.pg)
         elif x > self.pr:
             return 0
         elif x > self.ps:
-            print('hello')
-            print(self.beta*(1/(x-self.ps)-1/(self.pr-self.ps)))
             return self.beta*(1/(x-self.ps)-1/(self.pr-self.ps))
         else :
             return 0
-        raise Exception
 
     def phi(self, x):
         if x > self.pn:
@@ -66,12 +62,34 @@ class Sheep(Entity):
         x_rot = (cos(angle), -sin(angle))
         y_rot = (sin(angle), cos(angle))
 
-        x_vel = vel_to_dog_x + x_rot[0]*vel_to_sheeps_x + x_rot[1]*vel_to_sheeps_y
-        y_vel = vel_to_dog_y + y_rot[0]*vel_to_sheeps_x + y_rot[1]*vel_to_sheeps_y
-        return (x_vel, y_vel)
+        self.x_vel = vel_to_dog_x + x_rot[0]*vel_to_sheeps_x + x_rot[1]*vel_to_sheeps_y
+        self.alphay_vel = vel_to_dog_y + y_rot[0]*vel_to_sheeps_x + y_rot[1]*vel_to_sheeps_y
 
+    def is_visible(self):
+        # Fist, check if the dog can see the sheep 
+        if sqrt((self.x - self.display.sheepdog.x)**2 + (self.y - self.display.sheepdog.y)**2) > self.display.sheepdog.vision:
+            self.visible = False
+            return
+        for sheep in self.display.sheeps:
+            if sheep.id != self.id:
+                # Check if the sheep is visible by the dog
+                if self.unit(self.x - self.display.sheepdog.x, self.y - self.display.sheepdog.y) == self.unit(sheep.x - self.display.sheepdog.x, sheep.y - self.display.sheepdog.y) and sqrt((self.x - self.display.sheepdog.x)**2 + (self.y - self.display.sheepdog.y)**2) > sqrt((sheep.x - self.display.sheepdog.x)**2 + (sheep.y - self.display.sheepdog.y)**2):
+                    self.visible = False
+                    return
+        self.visible = True
+
+    def change_color(self):
+        if self.visible:
+            self.canvas.itemconfig(self.id, fill='green')
+        else:
+            self.canvas.itemconfig(self.id, fill='blue')
     def simulate(self):
-        x_vel, y_vel = self.velocity()
-        # print(x_vel, y_vel)
-        self.move(self.sampling*x_vel, self.sampling*y_vel)
+        # Compute the new position
+        self.velocity()
+        self.move(self.sampling*self.x_vel, self.sampling*self.y_vel)
+
+        # Check if the sheep is visible
+        self.is_visible()
+        self.change_color()
+
         self.canvas.after(100, self.simulate)
