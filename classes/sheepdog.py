@@ -5,15 +5,17 @@ from enum import Enum
 class Sheepdog(Entity):
 
     
-    def __init__(self, canvas, x, y, r=10, color='red'):
+    def __init__(self, canvas, x, y, vision, angle_threshold, radius_threshold, rot_left, rot_right, inradius_gain, outradius_gain, sampling, r=5, color='red'):
         super().__init__(canvas, x, y, r, color)
-        self.vision = 100
-        self.angle_threshold = 0.5
+        self.vision = vision
+        self.angle_threshold = angle_threshold
         self.state = 1
-        self.ra = 40
-        self.gamma_a = 450
-        self.gamma_b = 450
-        self.theta_r = 0.5
+        self.rot_left = rot_left
+        self.rot_right = rot_right
+        self.radius_threshold = radius_threshold
+        self.inradius_gain = inradius_gain
+        self.outradius_gain = outradius_gain
+        self.sampling = sampling
 
     def is_left_side(self, x1, y1, x2, y2):
         unit_1 = self.unit(x1, y1)
@@ -34,14 +36,16 @@ class Sheepdog(Entity):
         return angle
 
     def rotate(self, x, y, angle):
-        return (x*math.cos(angle)-y*math.sin(angle), x*math.sin(angle)+y*math.cos(angle))
+        """Rotate a point counterclockwise by a given angle around a given origin. return a np.array"""
+        return np.array([x*math.cos(angle)-y*math.sin(angle), x*math.sin(angle)+y*math.cos(angle)])
 
-    def simulate(self, event):
+    def velocity(self):
         sheeps_in_barn = 0
         for sheep in self.display.sheeps:
             if self.display.barn.is_inside(sheep.x, sheep.y):
                 sheeps_in_barn += 1
         if sheeps_in_barn != len(self.display.sheeps):
+            print("Sheeps in barn: ", sheeps_in_barn)
             dir_self_to_barn = self.unit(self.display.barn.x-self.x, self.display.barn.y-self.y)
             # Check if all sheeps are on the left of dir_self_to_barn
             all_sheeps_on_left = True
@@ -57,7 +61,9 @@ class Sheepdog(Entity):
 
             leftmost_sheep = None
             for sheep in self.display.sheeps :
-                if sheep.is_visible():
+                print(sheep.id, "...")
+                if sheep.visible:
+                    print("Sheep is visible")
                     if leftmost_sheep == None:
                         leftmost_sheep = sheep
                     elif sheep.x < leftmost_sheep.x:
@@ -65,7 +71,7 @@ class Sheepdog(Entity):
 
             rightmost_sheep = None
             for sheep in self.display.sheeps :
-                if sheep.is_visible():
+                if sheep.visible:
                     if rightmost_sheep == None:
                         rightmost_sheep = sheep
                     elif sheep.x > rightmost_sheep.x:
@@ -75,7 +81,7 @@ class Sheepdog(Entity):
             sheepherd_center = [0, 0]
             visible_sheeps = 0
             for sheep in self.display.sheeps :
-                if sheep.is_visible():
+                if sheep.visible:
                     sheepherd_center[0] += sheep.x
                     sheepherd_center[1] += sheep.y
                     visible_sheeps += 1
@@ -95,29 +101,47 @@ class Sheepdog(Entity):
 
 
             if all_sheeps_on_left and L_c > self.angle_threshold:
+                print("All sheeps on left")
                 self.state = 0
                 # if the distance between the sheepdog and the rightmost sheep is more than ra...
-                if self.distance(rightmost_sheep.x, rightmost_sheep.y) >= self.ra:
-                    self.x_vel, self.y_vel = self.gamma_a*self.unit(self.x-rightmost_sheep.x, self.y-rightmost_sheep.y)
+                if self.distance(rightmost_sheep.x, rightmost_sheep.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-rightmost_sheep.x, self.y-rightmost_sheep.y)
                 else:
-                    self.x_vel, self.y_vel = self.gamma_b*self.rotate(self.unit(self.display.barn.x-rightmost_sheep.x, self.display.barn.y-rightmost_sheep.y), self.theta_r)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-rightmost_sheep.x, self.display.barn.y-rightmost_sheep.y), self.rot_right)
             elif all_sheeps_on_right and R_c > self.angle_threshold:
+                print("All sheeps on right")
                 self.state = 1
                 # if the distance between the sheepdog and the leftmost sheep is more than ra...
-                if self.distance(leftmost_sheep.x, leftmost_sheep.y) >= self.ra:
-                    self.x_vel, self.y_vel = self.gamma_a*self.unit(self.x-leftmost_sheep.x, self.y-leftmost_sheep.y)
+                if self.distance(leftmost_sheep.x, leftmost_sheep.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-leftmost_sheep.x, self.y-leftmost_sheep.y)
                 else:
-                    self.x_vel, self.y_vel = self.gamma_b*self.rotate(self.unit(self.display.barn.x-leftmost_sheep.x, self.display.barn.y-leftmost_sheep.y), -self.theta_r)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-leftmost_sheep.x, self.display.barn.y-leftmost_sheep.y), -self.rot_left)
             elif self.state == 1:
-                if self.distance(leftmost_sheep.x, leftmost_sheep.y) >= self.ra:
-                    self.x_vel, self.y_vel = self.gamma_a*self.unit(self.x-leftmost_sheep.x, self.y-leftmost_sheep.y)
+                print("State 1")
+                if self.distance(leftmost_sheep.x, leftmost_sheep.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-leftmost_sheep.x, self.y-leftmost_sheep.y)
                 else:
-                    self.x_vel, self.y_vel = self.gamma_b*self.rotate(self.unit(self.display.barn.x-leftmost_sheep.x, self.display.barn.y-leftmost_sheep.y), -self.theta_r)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-leftmost_sheep.x, self.display.barn.y-leftmost_sheep.y), -self.rot_left)
             else:
-                if self.distance(rightmost_sheep.x, rightmost_sheep.y) >= self.ra:
-                    self.x_vel, self.y_vel = self.gamma_a*self.unit(self.x-rightmost_sheep.x, self.y-rightmost_sheep.y)
+                print("State 0")
+                if self.distance(rightmost_sheep.x, rightmost_sheep.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-rightmost_sheep.x, self.y-rightmost_sheep.y)
                 else:
-                    self.x_vel, self.y_vel = self.gamma_b*self.rotate(self.unit(self.display.barn.x-rightmost_sheep.x, self.display.barn.y-rightmost_sheep.y), self.theta_r)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-rightmost_sheep.x, self.display.barn.y-rightmost_sheep.y), self.rot_right)
         else :
+            print("All sheeps are in the barn !")
             self.x_vel, self.y_vel = 0, 0
+
+    def show_velocity(self):
+        # Remove the previous velocity vector
+        self.canvas.delete(f'velocity{self.id}')
+        # Show the velocity vector
+        self.canvas.create_line(self.x, self.y, self.x+self.x_vel*100, self.y+self.y_vel*100, fill='purple', tag=f'velocity{self.id}')
+
+    def simulate(self):
+        print("Simulate")
+        self.velocity()
+        self.move(self.sampling*self.x_vel, self.sampling*self.y_vel)
+        print("x_vel = ", self.x_vel, "y_vel = ", self.y_vel)
+        self.show_velocity()
         self.canvas.after(100, self.simulate)

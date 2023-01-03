@@ -4,6 +4,27 @@ from sheep import Sheep
 from sheepdog import Sheepdog
 from barn import Barn
 from enum import Enum
+import math
+
+safety = 5
+gain_to_dog = 7000
+gain_to_sheep_low = 1400
+gain_to_sheep_high = -140
+angle_gain = 0.1
+angle_param = 0.1
+dist_low = 15
+dist_high = 30
+dist_mid = 20
+
+vision = 50
+angle_threshold = 2*math.pi/3
+rot_left = -math.pi/4
+rot_right = math.pi/4
+radius_threshold = 40
+inradius_gain = 450
+outradius_gain = 375
+
+sampling = 0.005
 
 class Display:
     class State(Enum):
@@ -51,21 +72,19 @@ class Display:
             self.canvas.bind('<Button-1>', self.create_sheepdog)
         elif self.state == self.State.SIMULATION:
             self.canvas.unbind('<Button-1>')
-            for entity in self.sheeps:
+            for entity in self.sheeps + [self.sheepdog]:
+                print(entity.id)
                 entity.simulate()
-            self.canvas.bind('<B1-Motion>', self.sheepdog.simulate)
 
     def create_sheep(self, event):
-        print('sheep')
         x, y = event.x, event.y
-        self.sheeps.append(Sheep(self, x, y, 200, 10, -10, 0.1, 0.1, 50, 100, 30, 200))
+        self.sheeps.append(Sheep(self, x, y, gain_to_dog, gain_to_sheep_low, gain_to_sheep_high, angle_gain, angle_param, dist_low, dist_high, dist_mid, safety, sampling))
 
     
     def create_sheepdog(self, event):
-        print('dog')
         x,y = event.x, event.y
         if self.sheepdog == None:
-            self.sheepdog = Sheepdog(self, x,y)
+            self.sheepdog = Sheepdog(self, x,y, vision, angle_threshold, radius_threshold, rot_left, rot_right, inradius_gain, outradius_gain, sampling)
         else:
             self.sheepdog.moveto(x, y)
 
