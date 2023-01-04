@@ -4,20 +4,20 @@ theta_l : rot_left
 theta_r : rot_right
 gamma_a : inradius_gain
 gamma_b : outradius_gain
-ra : angle_threshold
+ra : radius_threshold
 rho_n : vision
 
 Sheep : 
-ai : 
-omega_i : 
+ai : angle_gain
+omega_i : angle_param
 alpha : gain_to_dog
-beta : gain_to_sheep_low x
-gamma : gain_to_sheep_high x
+beta : gain_to_sheep_low
+gamma : gain_to_sheep_high
 rho_n : dog.vision
-rho_r : 
-rho_g : 
-rho_d : 
-rho_s : 
+rho_r : dist_low
+rho_g : dist_mid
+rho_d : dist_high
+rho_s : safety
 
 psi : reaction_to_sheeps
 phi : reaction_to_dog

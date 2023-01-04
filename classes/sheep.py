@@ -91,7 +91,7 @@ class Sheep(Entity):
         # Remove the previous velocity vector
         self.canvas.delete(f'velocity{self.id}')
         # Show the velocity vector
-        self.canvas.create_line(self.x, self.y, self.x+self.x_vel*100, self.y+self.y_vel*100, fill='purple', tag=f'velocity{self.id}')
+        self.canvas.create_line(self.x, self.y, self.x+self.x_vel, self.y+self.y_vel, fill='purple', tag=f'velocity{self.id}')
 
     def simulate(self):
         # Compute the new position
@@ -102,4 +102,4 @@ class Sheep(Entity):
         self.is_visible()
         self.change_color()
         self.show_velocity()
-        self.canvas.after(100, self.simulate)
+        self.canvas.after(25, self.simulate)

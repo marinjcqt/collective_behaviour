@@ -18,11 +18,11 @@ dist_mid = 20
 
 vision = 50
 angle_threshold = 2*math.pi/3
-rot_left = -math.pi/4
+rot_left = -math.pi/4 % (2*math.pi)
 rot_right = math.pi/4
 radius_threshold = 40
-inradius_gain = 450
-outradius_gain = 375
+inradius_gain = -450
+outradius_gain = -375
 
 sampling = 0.005
 

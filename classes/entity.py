@@ -35,6 +35,8 @@ class Entity:
         self.canvas.after(10, lambda: self._sim(x_vel, y_vel))
 
     def unit(self, x, y):
+        if x == 0 and y == 0:
+            return np.array([0, 0])
         return np.array([x, y])/np.linalg.norm(np.array([x, y]))
 
     def distance(self, x, y):
