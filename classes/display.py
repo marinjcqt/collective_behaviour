@@ -61,8 +61,11 @@ class Display:
         self.sheepdog = None
 
         self.barn_radius = 100
+
+        self.barn = None
         
     def update_state(self, state):
+        """Update the state of the display and bind the appropriate events to the canvas"""
         self.state = state
         if self.state == self.State.ADD_BARN:
             self.canvas.bind('<Button-1>', self.create_barn)
@@ -77,11 +80,13 @@ class Display:
                 entity.simulate()
 
     def create_sheep(self, event):
+        """Create a sheep at the position of the mouse click"""
         x, y = event.x, event.y
         self.sheeps.append(Sheep(self, x, y, gain_to_dog, gain_to_sheep_low, gain_to_sheep_high, angle_gain, angle_param, dist_low, dist_high, dist_mid, safety, sampling))
 
     
     def create_sheepdog(self, event):
+        """Create a sheepdog at the position of the mouse click"""
         x,y = event.x, event.y
         if self.sheepdog == None:
             self.sheepdog = Sheepdog(self, x,y, vision, angle_threshold, radius_threshold, rot_left, rot_right, inradius_gain, outradius_gain, sampling)
@@ -89,6 +94,10 @@ class Display:
             self.sheepdog.moveto(x, y)
 
     def create_barn(self, event):
+        """Create a barn at the position of the mouse click"""
         x, y = event.x, event.y
-        self.barn = Barn(self, x, y, self.barn_radius)
+        if self.barn == None:
+            self.barn = Barn(self, x, y, self.barn_radius)
+        else:
+            self.barn.moveto(x, y)
 

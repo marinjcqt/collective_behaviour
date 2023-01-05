@@ -100,6 +100,12 @@ class Sheepdog(Entity):
         return np.array([x*math.cos(angle)-y*math.sin(angle), x*math.sin(angle)+y*math.cos(angle)])
 
     def find_rightmost_sheep_from_dog(self):
+        """Find the rightmost sheep from the dog
+
+        Returns
+        -------
+        Sheep
+            The rightmost sheep from the dog"""
         rightmost_sheep_from_barn = None
         for sheep in self.display.sheeps :
             if rightmost_sheep_from_barn == None:
@@ -109,6 +115,12 @@ class Sheepdog(Entity):
         return rightmost_sheep_from_barn
 
     def find_leftmost_sheep_from_dog(self):
+        """Find the leftmost sheep from the dog
+
+        Returns
+        -------
+        Sheep
+            The leftmost sheep from the dog"""
         leftmost_sheep_from_dog = None
         for sheep in self.display.sheeps :
             if leftmost_sheep_from_dog == None:
@@ -118,6 +130,12 @@ class Sheepdog(Entity):
         return leftmost_sheep_from_dog
 
     def find_rightmost_sheep_from_barn(self):
+        """Find the rightmost sheep from the barn
+        
+        Returns
+        -------
+        Sheep
+            The rightmost sheep from the barn"""
         rightmost_sheep_from_dog = None
         for sheep in self.display.sheeps :
             if rightmost_sheep_from_dog == None:
@@ -127,6 +145,12 @@ class Sheepdog(Entity):
         return rightmost_sheep_from_dog
 
     def find_leftmost_sheep_from_barn(self):
+        """Find the leftmost sheep from the barn
+        
+        Returns
+        -------
+        Sheep
+            The leftmost sheep from the barn"""
         leftmost_sheep_from_barn = None
         for sheep in self.display.sheeps :
             if leftmost_sheep_from_barn == None:
@@ -136,6 +160,12 @@ class Sheepdog(Entity):
         return leftmost_sheep_from_barn
 
     def count_sheeps_in_barn(self):
+        """Count the number of sheeps in the barn
+
+        Returns
+        -------
+        int
+            The number of sheeps in the barn"""
         sheeps_in_barn = 0
         for sheep in self.display.sheeps:
             if self.display.barn.is_inside(sheep.x, sheep.y):
@@ -143,16 +173,55 @@ class Sheepdog(Entity):
         return sheeps_in_barn
 
     def find_sheepherd_center(self):
-            # Compute sheepherd_center as the sum of the coordinates of all visible sheeps over the number of visible sheeps
-            sheepherd_center = np.array([0, 0])
-            visible_sheeps = 0
-            for sheep in self.display.sheeps :
-                if sheep.visible:
-                    sheepherd_center += np.array([sheep.x, sheep.y])
-                    visible_sheeps += 1
-            if visible_sheeps != 0:
-                sheepherd_center /= visible_sheeps
-            return sheepherd_center
+        """Find the center of the sheepherd
+
+        Returns
+        -------
+        np.array
+            The coordinates of the center of the sheepherd"""
+        sheepherd_center = np.array([0, 0], dtype=np.float64)
+        visible_sheeps = 0
+        for sheep in self.display.sheeps :
+            if sheep.visible:
+                sheepherd_center += np.array([sheep.x, sheep.y], dtype=np.float64)
+                visible_sheeps += 1
+        if visible_sheeps != 0:
+            sheepherd_center /= visible_sheeps
+        return sheepherd_center
+
+    def compute_Lc(self, leftmost_sheep_from_barn):
+        """Compute Lc
+
+        Parameters
+        ----------
+        leftmost_sheep_from_barn : Sheep
+            The leftmost sheep from the barn
+
+        Returns
+        -------
+        float
+            Lc"""
+        center = self.find_sheepherd_center()
+        Dcd = self.unit(self.display.barn.x-center[0], self.display.barn.y-center[1])
+        Lc = np.dot(Dcd, np.array([self.x, self.y])-np.array([leftmost_sheep_from_barn.x, leftmost_sheep_from_barn.y])) / (np.linalg.norm(Dcd)*np.linalg.norm(np.array([self.x, self.y])-np.array([leftmost_sheep_from_barn.x, leftmost_sheep_from_barn.y])))
+        return Lc % (2*math.pi)
+
+    def compute_Rc(self, rightmost_sheep_from_barn):
+        """Compute Rc
+        
+        Parameters
+        ----------
+        rightmost_sheep_from_barn : Sheep
+            The rightmost sheep from the barn
+        
+        Returns
+        -------
+        float
+            Rc"""
+        center = self.find_sheepherd_center()
+        Dcd = self.unit(self.display.barn.x-center[0], self.display.barn.y-center[1])
+        Rc = np.dot(Dcd, np.array([self.x, self.y])-np.array([rightmost_sheep_from_barn.x, rightmost_sheep_from_barn.y])) / (np.linalg.norm(Dcd)*np.linalg.norm(np.array([self.x, self.y])-np.array([rightmost_sheep_from_barn.x, rightmost_sheep_from_barn.y])))
+        return Rc % (2*math.pi)
 
     def velocity(self):
         """Change the velocity of the sheepdog
@@ -165,9 +234,9 @@ class Sheepdog(Entity):
             all_sheeps_on_right = True
             for sheep in self.display.sheeps:
                 dir_self_to_sheep = self.unit(sheep.x-self.x, sheep.y-self.y)
-                if self.is_left_side(*dir_self_to_barn, *dir_self_to_sheep):
-                    all_sheeps_on_left = False
                 if self.is_right_side(*dir_self_to_barn, *dir_self_to_sheep):
+                    all_sheeps_on_left = False
+                if self.is_left_side(*dir_self_to_barn, *dir_self_to_sheep):
                     all_sheeps_on_right = False
                 if not all_sheeps_on_left and not all_sheeps_on_right:
                     break
@@ -180,60 +249,44 @@ class Sheepdog(Entity):
 
             sheepherd_center = self.find_sheepherd_center()
 
-            # Compute L_c = <D^(cd), (x,y)-(leftmost_sheep_from_barn.x, leftmost_sheep_from_barn.y)>/||D^(cd)||.||(x,y)-(leftmost_sheep_from_barn.x, leftmost_sheep_from_barn.y)|| with D^(cd) = unit vector from the sheepherd center to the barn
-            dir_sheepherd_center_to_barn = self.unit(self.display.barn.x-sheepherd_center[0], self.display.barn.y-sheepherd_center[1])
-            dir_sheepherd_center_to_sheepdog = self.x-sheepherd_center[0], self.y-sheepherd_center[1]
-            L_c = np.dot(dir_sheepherd_center_to_barn, dir_sheepherd_center_to_sheepdog) / (np.linalg.norm(dir_sheepherd_center_to_barn) * np.linalg.norm(dir_sheepherd_center_to_sheepdog)) % (2*math.pi)
+            L_c = self.compute_Lc(leftmost_sheep_from_barn)
+            R_c = self.compute_Rc(rightmost_sheep_from_barn)
 
-            # Compute R_c = <D^(cd), (x,y)-(rightmost_sheep_from_barn.x, rightmost_sheep_from_barn.y)>/||D^(cd)||.||(x,y)-(rightmost_sheep_from_barn.x, rightmost_sheep_from_barn.y)|| with D^(cd) = unit vector from the sheepherd center to the barn
-            dir_sheepherd_center_to_barn = self.unit(self.display.barn.x-sheepherd_center[0], self.display.barn.y-sheepherd_center[1])
-            dir_sheepherd_center_to_sheepdog = self.x-sheepherd_center[0], self.y-sheepherd_center[1]
-            R_c = np.dot(dir_sheepherd_center_to_barn, dir_sheepherd_center_to_sheepdog) / (np.linalg.norm(dir_sheepherd_center_to_barn) * np.linalg.norm(dir_sheepherd_center_to_sheepdog)) % (2*math.pi)
 
-            print("all_sheeps_on_left: ", all_sheeps_on_left)
-            print("all_sheeps_on_right: ", all_sheeps_on_right)
-            print("L_c: ", L_c)
-            print("R_c: ", R_c)
             if all_sheeps_on_left and L_c > self.angle_threshold:
-                print("state left")
-                print()
                 self.state = 0
                 # if the distance between the sheepdog and the rightmost sheep is more than ra...
-                if self.distance(rightmost_sheep_from_barn.x, rightmost_sheep_from_barn.y) >= self.radius_threshold:
-                    print("distance rightmost sheepdog > ra")
-                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-rightmost_sheep_from_barn.x, self.y-rightmost_sheep_from_barn.y)
+                if self.distance(rightmost_sheep_from_dog.x, rightmost_sheep_from_dog.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-rightmost_sheep_from_dog.x, self.y-rightmost_sheep_from_dog.y)
                 else:
-                    print("distance rightmost sheepdog < ra")
-                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-rightmost_sheep_from_barn.x, self.display.barn.y-rightmost_sheep_from_barn.y), self.rot_right)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.x-rightmost_sheep_from_dog.x, self.y-rightmost_sheep_from_dog.y), self.rot_right)
             elif all_sheeps_on_right and R_c > self.angle_threshold:
-                print("state right")
-                print()
                 self.state = 1
                 # if the distance between the sheepdog and the leftmost sheep is more than ra...
-                if self.distance(leftmost_sheep_from_barn.x, leftmost_sheep_from_barn.y) >= self.radius_threshold:
-                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-leftmost_sheep_from_barn.x, self.y-leftmost_sheep_from_barn.y)
+                if self.distance(leftmost_sheep_from_dog.x, leftmost_sheep_from_dog.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-leftmost_sheep_from_dog.x, self.y-leftmost_sheep_from_dog.y)
                 else:
-                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-leftmost_sheep_from_barn.x, self.display.barn.y-leftmost_sheep_from_barn.y), -self.rot_left)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.x-leftmost_sheep_from_dog.x, self.y-leftmost_sheep_from_dog.y), self.rot_left)
             elif self.state == 1:
-                if self.distance(leftmost_sheep_from_barn.x, leftmost_sheep_from_barn.y) >= self.radius_threshold:
-                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-leftmost_sheep_from_barn.x, self.y-leftmost_sheep_from_barn.y)
+                if self.distance(leftmost_sheep_from_dog.x, leftmost_sheep_from_dog.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-leftmost_sheep_from_dog.x, self.y-leftmost_sheep_from_dog.y)
                 else:
-                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-leftmost_sheep_from_barn.x, self.display.barn.y-leftmost_sheep_from_barn.y), -self.rot_left)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.x-leftmost_sheep_from_dog.x, self.y-leftmost_sheep_from_dog.y), self.rot_left)
             else:
-                if self.distance(rightmost_sheep_from_barn.x, rightmost_sheep_from_barn.y) >= self.radius_threshold:
-                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-rightmost_sheep_from_barn.x, self.y-rightmost_sheep_from_barn.y)
+                if self.distance(rightmost_sheep_from_dog.x, rightmost_sheep_from_dog.y) >= self.radius_threshold:
+                    self.x_vel, self.y_vel = self.inradius_gain*self.unit(self.x-rightmost_sheep_from_dog.x, self.y-rightmost_sheep_from_dog.y)
                 else:
-                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.display.barn.x-rightmost_sheep_from_barn.x, self.display.barn.y-rightmost_sheep_from_barn.y), self.rot_right)
+                    self.x_vel, self.y_vel = self.outradius_gain*self.rotate(*self.unit(self.x-rightmost_sheep_from_dog.x, self.y-rightmost_sheep_from_dog.y), self.rot_right)
         else :
             self.x_vel, self.y_vel = 0, 0
 
     def show_velocity(self):
-        # Remove the previous velocity vector
+        """Show the velocity of the sheepdog"""
         self.canvas.delete(f'velocity{self.id}')
-        # Show the velocity vector
         self.canvas.create_line(self.x, self.y, self.x+self.x_vel, self.y+self.y_vel, fill='purple', tag=f'velocity{self.id}')
 
     def simulate(self):
+        """Simulate the sheepdog"""
         self.velocity()
         self.move(self.sampling*self.x_vel, self.sampling*self.y_vel)
         self.show_velocity()

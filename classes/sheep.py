@@ -18,6 +18,17 @@ class Sheep(Entity):
         self.step = 0
 
     def reaction_to_sheeps(self, x):
+        """Return the reaction of the sheep to other sheeps in a form of a gain
+        
+        Parameters
+        ----------
+        x : float
+            The distance between the sheep and the other sheep
+        
+        Returns
+        -------
+        float
+            The gain of the reaction"""
         if x > self.dist_high:
             return 0
         elif x > self.dist_mid:
@@ -30,6 +41,17 @@ class Sheep(Entity):
             return 0
 
     def reaction_to_dog(self, x):
+        """Return the reaction of the sheep to the dog in a form of a gain
+
+        Parameters
+        ----------
+        x : float
+            The distance between the sheep and the dog
+
+        Returns
+        -------
+        float
+            The gain of the reaction"""
         dog_vision = self.display.sheepdog.vision
         if x > dog_vision:
             return 0
@@ -38,6 +60,12 @@ class Sheep(Entity):
         raise Exception
 
     def vel_to_dog(self):
+        """Return the velocity vector of the sheep to the dog
+
+        Returns
+        -------
+        tuple
+            The velocity vector of the sheep to the dog"""
         x_to_dog = self.x - self.display.sheepdog.x
         y_to_dog = self.y - self.display.sheepdog.y
         ux_to_dog, uy_to_dog = self.unit(x_to_dog, y_to_dog)
@@ -45,6 +73,12 @@ class Sheep(Entity):
         return (reaction_to_dog*ux_to_dog, reaction_to_dog*uy_to_dog)
 
     def vel_to_sheeps(self):
+        """Return the velocity vector of the sheep to the other sheeps
+        
+        Returns
+        -------
+        tuple
+            The velocity vector of the sheep to the other sheeps"""
         vel_x = 0
         vel_y = 0
         for sheep in self.display.sheeps:
@@ -58,6 +92,7 @@ class Sheep(Entity):
         return (vel_x, vel_y)
 
     def velocity(self):
+        """COmpute the velocity of the sheep"""
         vel_to_sheeps_x, vel_to_sheeps_y = self.vel_to_sheeps()
         vel_to_dog_x, vel_to_dog_y = self.vel_to_dog()
         angle = self.angle_gain*pi/180*sin(self.angle_param*self.step*self.sampling)
@@ -68,19 +103,19 @@ class Sheep(Entity):
         self.y_vel = vel_to_dog_y + y_rot[0]*vel_to_sheeps_x + y_rot[1]*vel_to_sheeps_y
 
     def is_visible(self):
-        # Fist, check if the dog can see the sheep 
+        """Check if the sheep is visible by the dog"""
         if sqrt((self.x - self.display.sheepdog.x)**2 + (self.y - self.display.sheepdog.y)**2) > self.display.sheepdog.vision:
             self.visible = False
             return
         for sheep in self.display.sheeps:
             if sheep.id != self.id:
-                # Check if the sheep is visible by the dog
                 if np.array_equal(self.unit(self.x - self.display.sheepdog.x, self.y - self.display.sheepdog.y), self.unit(sheep.x - self.display.sheepdog.x, sheep.y - self.display.sheepdog.y)) and sqrt((self.x - self.display.sheepdog.x)**2 + (self.y - self.display.sheepdog.y)**2) > sqrt((sheep.x - self.display.sheepdog.x)**2 + (sheep.y - self.display.sheepdog.y)**2):
                     self.visible = False
                     return
         self.visible = True
 
     def change_color(self):
+        """Change the color of the sheep depending on its visibility"""
         if self.visible:
             self.canvas.itemconfig(self.id, fill='green')
         else:
@@ -88,12 +123,12 @@ class Sheep(Entity):
 
     
     def show_velocity(self):
-        # Remove the previous velocity vector
+        """Show the velocity vector of the sheep"""
         self.canvas.delete(f'velocity{self.id}')
-        # Show the velocity vector
         self.canvas.create_line(self.x, self.y, self.x+self.x_vel, self.y+self.y_vel, fill='purple', tag=f'velocity{self.id}')
 
     def simulate(self):
+        """Simulate the movement of the sheep"""
         # Compute the new position
         self.velocity()
         self.move(self.sampling*self.x_vel, self.sampling*self.y_vel)
